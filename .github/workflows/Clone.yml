@@ -21,7 +21,7 @@ jobs:
                --adjust-extension \
                --page-requisites \
                --no-parent \
-               -P ./cloned-site \
+               -P ./cloned-sites \
                https://deenislamic.com/prayertime
 
       - name: Commit and Push Changes
