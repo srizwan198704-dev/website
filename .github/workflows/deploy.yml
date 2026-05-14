@@ -1,0 +1,39 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main  # মেইন ব্রাঞ্চে কোনো পরিবর্তন হলেই হোস্ট হবে
+  workflow_run:
+    workflows: ["Website Cloner"] # আগের ক্লোনার অ্যাকশন শেষ হলে এটি নিজে নিজেই চলবে
+    types:
+      - completed
+  workflow_dispatch: # ম্যানুয়ালি রান করার জন্য
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # এখানে ক্লোন করা ফোল্ডারের পাথ দিতে হবে
+          path: './cloned-site/deenislamic.com' 
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
