@@ -14,7 +14,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-speed: '20'
+          node-version: '20'
 
       - name: Install Puppeteer
         run: npm install puppeteer
@@ -25,18 +25,30 @@ jobs:
           const puppeteer = require('puppeteer');
 
           (async () => {
-            const browser = await puppeteer.launch({ headless: "new" });
-            const page = await browser.newPage();
+            const browser = await puppeteer.launch({ 
+              headless: "new",
+              args: [
+                '--no-sandbox', 
+                '--disable-setuid-sandbox',
+                '--disable-dev-shm-usage'
+              ] 
+            });
             
+            const page = await browser.newPage();
             const apis = new Set();
 
-            // ইন্টারসেপ্ট নেটওয়ার্ক রিকোয়েস্ট
             await page.setRequestInterception(true);
             page.on('request', request => {
               const url = request.url();
-              // শুধুমাত্র এপিআই বা ডাটা রিকোয়েস্ট ফিল্টার করার চেষ্টা
-              if (url.includes('api') || request.resourceType() === 'fetch' || request.resourceType() === 'xhr') {
-                apis.add(url);
+              const type = request.resourceType();
+              
+              if (
+                url.includes('api') || 
+                type === 'fetch' || 
+                type === 'xhr' || 
+                url.endsWith('.json')
+              ) {
+                apis.add(`[${type.toUpperCase()}] ${url}`);
               }
               request.continue();
             });
@@ -47,7 +59,7 @@ jobs:
                 timeout: 60000
               });
             } catch (e) {
-              console.log("Navigation timeout, processing captured data...");
+              console.log("Navigation timeout, processing results...");
             }
 
             console.log("--- Extracted API/Data Endpoints ---");
