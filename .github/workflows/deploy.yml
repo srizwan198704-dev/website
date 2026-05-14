@@ -32,7 +32,7 @@ jobs:
         uses: actions/upload-pages-artifact@v3
         with:
           # এখানে ক্লোন করা ফোল্ডারের পাথ দিতে হবে
-          path: './cloned-site/deenislamic.com' 
+          path: './cloned-sites/deenislamic.com' 
 
       - name: Deploy to GitHub Pages
         id: deployment
