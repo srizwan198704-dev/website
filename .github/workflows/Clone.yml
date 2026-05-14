@@ -1,0 +1,33 @@
+name: Website Cloner
+
+on:
+  workflow_dispatch: # ম্যানুয়ালি রান করার জন্য
+
+jobs:
+  clone-site:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Install wget
+        run: sudo apt-get install wget
+
+      - name: Clone Website
+        run: |
+          mkdir -p cloned-site
+          wget --mirror \
+               --convert-links \
+               --adjust-extension \
+               --page-requisites \
+               --no-parent \
+               -P ./cloned-site \
+               https://deenislamic.com/prayertime
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          git commit -m "Cloned deenislamic prayertime page" || echo "No changes to commit"
+          git push
