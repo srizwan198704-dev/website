@@ -1,0 +1,61 @@
+name: Clone and Deploy Website
+
+on:
+  workflow_dispatch: # ম্যানুয়ালি রান করার জন্য
+
+permissions:
+  contents: write
+  pages: write
+  id-token: write
+
+jobs:
+  clone-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install wget
+        run: sudo apt-get install wget -y
+
+      - name: Clone Website
+        run: |
+          mkdir -p full-site
+          wget --mirror \
+               --page-requisites \
+               --adjust-extension \
+               --convert-links \
+               --no-parent \
+               -l 2 \
+               -P ./full-site \
+               https://deenislamic.com/
+          
+          # ফাইলগুলোকে রুট লেভেলে গুছিয়ে নেওয়া যাতে হোস্টিং সহজ হয়
+          mv ./full-site/deenislamic.com/* ./full-site/
+          rm -rf ./full-site/deenislamic.com
+
+      - name: Commit Cloned Files
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git add .
+          if [ -n "$(git status --porcelain)" ]; then
+            git commit -m "Updated full website clone"
+            git push origin main
+          else
+            echo "No changes to commit"
+          fi
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload Artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './full-site' # এই ফোল্ডারের ফাইলগুলোই লাইভ হবে
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
