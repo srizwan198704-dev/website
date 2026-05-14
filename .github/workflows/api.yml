@@ -1,0 +1,65 @@
+name: Extract APIs from URL
+
+on:
+  workflow_dispatch:
+
+jobs:
+  extract-apis:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-speed: '20'
+
+      - name: Install Puppeteer
+        run: npm install puppeteer
+
+      - name: Extract Network Requests
+        run: |
+          cat << 'EOF' > extract.js
+          const puppeteer = require('puppeteer');
+
+          (async () => {
+            const browser = await puppeteer.launch({ headless: "new" });
+            const page = await browser.newPage();
+            
+            const apis = new Set();
+
+            // ইন্টারসেপ্ট নেটওয়ার্ক রিকোয়েস্ট
+            await page.setRequestInterception(true);
+            page.on('request', request => {
+              const url = request.url();
+              // শুধুমাত্র এপিআই বা ডাটা রিকোয়েস্ট ফিল্টার করার চেষ্টা
+              if (url.includes('api') || request.resourceType() === 'fetch' || request.resourceType() === 'xhr') {
+                apis.add(url);
+              }
+              request.continue();
+            });
+
+            try {
+              await page.goto('https://muslimbangla.com/world/BD/prayer-times-Dhaka', {
+                waitUntil: 'networkidle2',
+                timeout: 60000
+              });
+            } catch (e) {
+              console.log("Navigation timeout, processing captured data...");
+            }
+
+            console.log("--- Extracted API/Data Endpoints ---");
+            apis.forEach(api => console.log(api));
+            
+            await browser.close();
+          })();
+          EOF
+          node extract.js > api_list.txt
+
+      - name: Upload Results
+        uses: actions/upload-artifact@v4
+        with:
+          name: api-endpoints
+          path: api_list.txt
