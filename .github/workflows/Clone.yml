@@ -15,14 +15,14 @@ jobs:
 
       - name: Clone Website
         run: |
-          mkdir -p cloned-site
+          mkdir -p cloned-sites
           wget --mirror \
                --convert-links \
                --adjust-extension \
                --page-requisites \
                --no-parent \
                -P ./cloned-sites \
-               https://deenislamic.com/prayertime
+               https://deenislamic.com/
 
       - name: Commit and Push Changes
         run: |
